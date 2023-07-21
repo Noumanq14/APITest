@@ -27,3 +27,9 @@ Route::get('/movieList',[MovieListController::class,'index'])->name('movie-list'
 Route::get('/movieDetails',[MovieListController::class,'movieDetails'])->name('movie-details')->middleware(['auth:sanctum','userAccess']);
 Route::post('/movieUpdate',[MovieListController::class,'movieUpdate'])->name('movie-update')->middleware(['auth:sanctum','userAccess']);
 Route::delete('/movieDelete',[MovieListController::class,'movieDelete'])->name('movie-delete')->middleware(['auth:sanctum','userAccess']);
+
+//Using 2nd API
+Route::get('/starwarFilms',[MovieListController::class,'starwarFilms'])->name('starwarFilms-list')->middleware(['auth:sanctum','userAccess']);
+Route::get('/starwarFilmDetails',[MovieListController::class,'starwarFilmDetails'])->name('starwarFilm-detail')->middleware(['auth:sanctum','userAccess']);
+Route::post('/starwarFilmUpdate',[MovieListController::class,'starwarFilmUpdate'])->name('starwarFilm-detail')->middleware(['auth:sanctum','userAccess']);
+Route::delete('/starwarFilmDelete',[MovieListController::class,'starwarFilmDelete'])->name('starwarFilm-detail')->middleware(['auth:sanctum','userAccess']);

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\starwar_films;
+use App\Models\starwarfilm_detail;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -183,6 +185,179 @@ class MovieListController extends Controller
             $movieDetail = MovieDetail::where('movie_id',$movieId)->delete();
 
             if ($movieDetail)
+                return response()->json([
+                    'success'    => true,
+                    'message'    => 'Movie Details Deleted Successfully',
+                    'data'       => ''
+                ],200);
+            else
+                return response()->json([
+                    'success'    => false,
+                    'message'    => 'Unable to delete the record',
+                    'data'       => ''
+                ],400);
+        }
+        else
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Unable to delete the record',
+                'data'       => ''
+            ],400);
+    }
+
+    public function starwarFilms()
+    {
+        if (Cache::has('starwarFilms'))
+        {
+            return response()->json([
+                'success' => true,
+                'message'    => 'Star War Films Data Found Successfully From Cache',
+                'data'       => Cache::get('starwarFilms')
+            ],200);
+        }
+        else
+        {
+            $response = Http::get('https://swapi.dev/api/films');
+
+
+            $aResponse = $response->json();
+
+            $record = [
+                "count"    => $aResponse["count"],
+                "next"     => $aResponse["next"],
+                "previous" => $aResponse["previous"],
+                "results"  => json_encode($aResponse["results"])
+            ];
+
+            $starwarFilms = new starwar_films();
+
+            $iCount = $starwarFilms::all()->count();
+            if ($iCount <= 0)
+                $starwarFilms::create($record);
+
+            Cache::put('starwarFilms', $record, 20);
+
+            return response()->json([
+                'success' => true,
+                'message'    => 'Star War Films Data Found Successfully',
+                'data'       => Cache::get('starwarFilms')
+            ],200);
+        }
+    }
+
+    public function starwarFilmDetails(Request $request)
+    {
+        $filmId = $request["film_id"] ?? 0;
+
+        if ($filmId <= 0)
+            throw new HttpResponseException(response()->json([
+                'success'   => false,
+                'message'   => 'film_id is required'
+            ],400));
+
+        if (Cache::has('starwarFilmDetails'))
+        {
+            return response()->json([
+                'success' => true,
+                'message'    => 'Star War Film Details Data Found Successfully From Cache',
+                'data'       => Cache::get('starwarFilmDetails')
+            ],200);
+        }
+        else
+        {
+            $response = Http::get('https://swapi.dev/api/films/'.$filmId);
+
+            $aResponse = $response->json();
+
+            $record = [
+                "film_id"       => $filmId,
+                "title"         => $aResponse["title"],
+                "episode_id"    => $aResponse["episode_id"],
+                "opening_crawl" => $aResponse["opening_crawl"],
+                "director"      => $aResponse["director"],
+                "producer"      => $aResponse["producer"],
+                "release_date"  => $aResponse["release_date"],
+                "characters"    => json_encode($aResponse["characters"]),
+                "planets"       => json_encode($aResponse["planets"]),
+                "starships"     => json_encode($aResponse["starships"]),
+                "vehicles"      => json_encode($aResponse["vehicles"]),
+                "species"       => json_encode($aResponse["species"]),
+                "created"       => $aResponse["created"],
+                "edited"        => $aResponse["edited"],
+                "url"           => $aResponse["url"]
+            ];
+
+
+
+            $count = starwarfilm_detail::where('film_id',$filmId)->count();
+            if ($count <= 0)
+                starwarfilm_detail::create($record);
+
+            Cache::put('starwarFilmDetails', $record, 20);
+
+            return response()->json([
+                'success'    => true,
+                'message'    => 'Star War Film Details Data Found Successfully',
+                'data'       => Cache::get('starwarFilmDetails')
+            ],200);
+        }
+    }
+
+    public function starwarFilmUpdate(Request $request)
+    {
+        $filmId = $request["film_id"] ?? 0;
+
+        if ($filmId <= 0)
+            throw new HttpResponseException(response()->json([
+                'success'   => false,
+                'message'   => 'film_id is required'
+            ],400));
+
+        $data    = $request["data"] ?? array();
+
+        if (count($data) <= 0)
+            throw new HttpResponseException(response()->json([
+                'success'   => false,
+                'message'   => 'data is required'
+            ],400));
+
+        $count = starwarfilm_detail::where('film_id',$filmId)->count();
+
+        if ($count > 0)
+        {
+            starwarfilm_detail::where('film_id',$filmId)->update($data);
+
+            return response()->json([
+                'success'    => true,
+                'message'    => 'Movie Details Updated Successfully',
+                'data'       => ''
+            ],200);
+        }
+        else
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Unable to update the record',
+                'data'       => ''
+            ],400);
+    }
+
+    public function starwarFilmDelete(Request $request)
+    {
+        $filmid = $request["film_id"] ?? 0;
+
+        if ($filmid <= 0)
+            throw new HttpResponseException(response()->json([
+                'success'   => false,
+                'message'   => 'Validation errors',
+                'data'      => 'film_id is required'
+            ]));
+
+        $count = starwarfilm_detail::where('film_id',$filmid)->count();
+        if ($count > 0)
+        {
+            $filmDetail = starwarfilm_detail::where('film_id',$filmid)->delete();
+
+            if ($filmDetail)
                 return response()->json([
                     'success'    => true,
                     'message'    => 'Movie Details Deleted Successfully',
